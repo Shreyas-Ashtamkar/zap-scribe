@@ -9,9 +9,11 @@
  * 4. Start the client with `npm start`.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import * as monaco from 'monaco-editor';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -21,39 +23,85 @@ function App() {
   const [socket, setSocket] = useState(null);
   const [version, setVersion] = useState(0);
 
-  // Establish WebSocket connection when a document is joined
+  const editorContainerRef = useRef(null);
+  const monacoInstanceRef = useRef(null);
+  const isUpdating = useRef(false);
+
+  // Initialize Monaco Editor once the editor container is available.
+  useEffect(() => {
+    if (editorContainerRef.current) {
+      monacoInstanceRef.current = monaco.editor.create(editorContainerRef.current, {
+        value: editorContent,
+        language: 'plaintext',
+        theme: 'vs-light',
+        automaticLayout: true,
+      });
+
+      // Listen for local changes.
+      const subscription = monacoInstanceRef.current.onDidChangeModelContent(() => {
+        if (!isUpdating.current) {
+          const newValue = monacoInstanceRef.current.getValue();
+          setEditorContent(newValue);
+          if (socket && docId) {
+            socket.emit('edit', { documentId: docId, diff: newValue, clientVersion: version });
+          }
+        }
+      });
+
+      return () => {
+        subscription.dispose();
+        monacoInstanceRef.current.dispose();
+      };
+    }
+  }, [editorContainerRef, socket, docId, version]);
+
+  // Setup WebSocket connection when a document is joined.
   useEffect(() => {
     if (docId) {
       const newSocket = io('http://localhost:4000');
       setSocket(newSocket);
 
-      // Join the document session
+      // Join the document session.
       newSocket.emit('join', { documentId: docId });
 
-      // Listen for the initial sync message
+      // Sync initial content.
       newSocket.on('sync', (data) => {
         console.log('Received sync data:', data);
-        setEditorContent(data.content);
         setVersion(data.version);
+        setEditorContent(data.content);
+        if (monacoInstanceRef.current) {
+          isUpdating.current = true;
+          monacoInstanceRef.current.setValue(data.content);
+          setTimeout(() => {
+            isUpdating.current = false;
+          }, 0);
+        }
       });
 
-      // Listen for real-time edits from others
+      // Listen for real-time edits.
       newSocket.on('edit', (data) => {
         console.log('Received edit:', data);
-        setEditorContent(data.content);
         setVersion(data.version);
+        setEditorContent(data.content);
+        if (monacoInstanceRef.current) {
+          isUpdating.current = true;
+          monacoInstanceRef.current.setValue(data.content);
+          setTimeout(() => {
+            isUpdating.current = false;
+          }, 0);
+        }
       });
 
       return () => newSocket.close();
     }
   }, [docId]);
 
-  // Handle file selection from the input
+  // Handle file selection.
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  // Upload file to the File Server
+  // Upload file to the File Server.
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!file) return;
@@ -62,7 +110,7 @@ function App() {
 
     try {
       const res = await axios.post('http://localhost:5000/api/files', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       setUploadedFileInfo(res.data.file);
       alert('File uploaded successfully!');
@@ -73,59 +121,48 @@ function App() {
     }
   };
 
-  // Join the document session. Here we use the uploaded file's filename as the document ID.
+  // Join the document session.
   const handleJoinDocument = () => {
     if (uploadedFileInfo && uploadedFileInfo.filename) {
       setDocId(uploadedFileInfo.filename);
-    } else if (docId) {
-      // Already have a docId; nothing to do.
-    } else {
+    } else if (!docId) {
       alert('Please upload a file first or manually enter a document ID.');
     }
   };
 
-  // Handle changes in the text editor.
-  // For simplicity, we send the entire text as the "diff".
-  const handleEditorChange = (e) => {
-    const newContent = e.target.value;
-    setEditorContent(newContent);
-
-    if (socket && docId) {
-      socket.emit('edit', { documentId: docId, diff: newContent, clientVersion: version });
-    }
-  };
-
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Collaborative Editor</h1>
+    <div className="container mt-4">
+      <h1 className="mb-4">Collaborative Editor</h1>
 
-      <section>
+      <section className="mb-5">
         <h2>File Upload</h2>
         <form onSubmit={handleUpload}>
-          <input type="file" onChange={handleFileChange} />
-          <button type="submit">Upload File</button>
+          <div className="mb-3">
+            <input type="file" className="form-control" onChange={handleFileChange} />
+          </div>
+          <button type="submit" className="btn btn-primary">Upload File</button>
         </form>
       </section>
 
-      <section>
+      <section className="mb-5">
         <h2>Join Document Session</h2>
-        <input
-          type="text"
-          placeholder="Enter Document ID"
-          value={docId}
-          onChange={(e) => setDocId(e.target.value)}
-        />
-        <button onClick={handleJoinDocument}>Join Document</button>
+        <div className="input-group mb-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter Document ID"
+            value={docId}
+            onChange={(e) => setDocId(e.target.value)}
+          />
+          <button className="btn btn-outline-secondary" onClick={handleJoinDocument}>Join Document</button>
+        </div>
         <p>Document ID: {docId}</p>
       </section>
 
-      <section>
+      <section className="mb-5">
         <h2>Editor</h2>
-        <textarea
-          style={{ width: '100%', height: '300px' }}
-          value={editorContent}
-          onChange={handleEditorChange}
-        />
+        {/* The Monaco Editor will mount into this div */}
+        <div ref={editorContainerRef} style={{ height: '300px', border: '1px solid #ddd' }}></div>
       </section>
     </div>
   );
