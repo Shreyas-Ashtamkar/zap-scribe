@@ -1,6 +1,7 @@
 /**
  * File: server.js
- * Description: Real-Time Sync Server for handling WebSocket connections and collaborative edits.
+ * Description: Real-Time Sync Server for handling WebSocket connections,
+ *              collaborative edits, and listing active sessions.
  * 
  * Steps before running:
  * 1. Navigate to the sync-server folder.
@@ -65,6 +66,17 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
+});
+
+// New endpoint: List active document sessions
+app.get('/api/sessions', (req, res) => {
+  // Create an array of session info from the documents store.
+  const sessions = Object.keys(documents).map(documentId => ({
+    documentId,
+    version: documents[documentId].version,
+    // Optionally, you could add a snippet of the content or other info here.
+  }));
+  res.json({ sessions });
 });
 
 // Start the server on port 4000
