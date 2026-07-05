@@ -111,6 +111,7 @@ The next major goal is to evolve Zap Scribe from prototype to a dependable multi
 
 - Session state is stored in memory and resets on restart.
 - Current sync path is simplified and not conflict-safe for true concurrent edits.
+- Client `edit` events currently omit `documentId`, so `sync-server` does not apply/broadcast edits for joined sessions.
 - No authentication or authorization yet.
 
 ## Repository Layout
