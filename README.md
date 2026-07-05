@@ -81,24 +81,24 @@ The next major goal is to evolve Zap Scribe from prototype to a dependable multi
 ### 6-Month Product Direction
 
 1. Collaboration Correctness
-- Replace full-content broadcasts with operation-based sync (OT or CRDT).
-- Add document identity and version checks to every edit event.
-- Persist document state in a database instead of memory-only storage.
+   - Replace full-content broadcasts with operation-based sync (OT or CRDT).
+   - Add document identity and version checks to every edit event.
+   - Persist document state in a database instead of memory-only storage.
 
 2. Performance and Scale
-- Introduce delta-based updates and compression for large files.
-- Add Redis adapter for horizontal Socket.IO scaling.
-- Add rate limiting and payload size guards on upload and sync endpoints.
+   - Introduce delta-based updates and compression for large files.
+   - Add Redis adapter for horizontal Socket.IO scaling.
+   - Add rate limiting and payload size guards on upload and sync endpoints.
 
 3. Workflow Utility
-- Add auth + role-based access (owner/editor/viewer).
-- Add project spaces with file trees instead of single-file sessions.
-- Add session history and restore points.
+   - Add auth + role-based access (owner/editor/viewer).
+   - Add project spaces with file trees instead of single-file sessions.
+   - Add session history and restore points.
 
 4. Operability
-- Add structured logging, health checks, and metrics.
-- Add CI gates for build, tests, lint, and security scans.
-- Add deployment manifests and environment-based configuration.
+   - Add structured logging, health checks, and metrics.
+   - Add CI gates for build, tests, lint, and security scans.
+   - Add deployment manifests and environment-based configuration.
 
 ### Success Metrics
 
