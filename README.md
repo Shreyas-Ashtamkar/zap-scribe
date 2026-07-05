@@ -58,16 +58,18 @@ Client runs on `http://localhost:3000`.
 ## Validation Commands
 
 - Client build:
-```bash
-cd client
-npm run build
-```
+
+  ```bash
+  cd client
+  npm run build
+  ```
 
 - Client tests:
-```bash
-cd client
-CI=true npm test -- --watch=false
-```
+
+  ```bash
+  cd client
+  CI=true npm test -- --watch=false
+  ```
 
 ## Future Goal: Efficient, Useful Collaboration Platform
 
