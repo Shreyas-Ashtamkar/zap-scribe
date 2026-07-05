@@ -29,26 +29,29 @@ Zap Scribe is a collaborative code editing prototype with three services:
 Open three terminals:
 
 1. Start file server:
-```bash
-cd file-server
-npm ci
-mkdir -p uploads
-npm start
-```
+
+   ```bash
+   cd file-server
+   npm ci
+   mkdir -p uploads
+   npm start
+   ```
 
 2. Start sync server:
-```bash
-cd sync-server
-npm ci
-npm start
-```
+
+   ```bash
+   cd sync-server
+   npm ci
+   npm start
+   ```
 
 3. Start client:
-```bash
-cd client
-npm ci
-npm start
-```
+
+   ```bash
+   cd client
+   npm ci
+   npm start
+   ```
 
 Client runs on `http://localhost:3000`.
 
